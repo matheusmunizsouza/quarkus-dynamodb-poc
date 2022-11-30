@@ -11,14 +11,33 @@ provider "aws" {
 }
 
 resource "aws_dynamodb_table" "dynamodb-table" {
-  name           = "Book"
+  name           = "person"
   billing_mode   = "PROVISIONED"
   read_capacity  = 20
   write_capacity = 20
-  hash_key       = "Isbn"
+  hash_key       = "firstName"
+  range_key      = "lastName"
 
   attribute {
-    name = "Isbn"
+    name = "firstName"
     type = "S"
+  }
+
+  attribute {
+    name = "lastName"
+    type = "S"
+  }
+
+  attribute {
+    name = "cpf"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "cpf_index"
+    hash_key        = "cpf"
+    write_capacity  = 10
+    read_capacity   = 10
+    projection_type = "ALL"
   }
 }
