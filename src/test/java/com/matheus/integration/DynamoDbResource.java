@@ -1,33 +1,26 @@
 package com.matheus.integration;
 
-import com.amazonaws.services.dynamodbv2.local.main.ServerRunner;
-import com.amazonaws.services.dynamodbv2.local.server.DynamoDBProxyServer;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import java.util.Map;
+import org.testcontainers.containers.GenericContainer;
 
 public class DynamoDbResource implements QuarkusTestResourceLifecycleManager {
 
-  private DynamoDBProxyServer server;
+  private GenericContainer dynamodb;
+
   @Override
   public Map<String, String> start() {
-    System.setProperty("sqlite4java.library.path", "native-libs");
-    String port = "8000";
-    try {
-      server = ServerRunner.createServerFromCommandLineArgs(
-          new String[]{"-inMemory", "-port", port});
-      server.start();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-    return null;
+    dynamodb = new GenericContainer("amazon/dynamodb-local")
+        .withExposedPorts(8000)
+        .withCommand("-jar DynamoDBLocal.jar -inMemory -sharedDb");
+
+    dynamodb.start();
+    return Map.of("quarkus.dynamodb.endpoint-override",
+        "http://localhost:" + dynamodb.getFirstMappedPort());
   }
 
   @Override
   public void stop() {
-    try {
-      server.stop();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    dynamodb.stop();
   }
 }

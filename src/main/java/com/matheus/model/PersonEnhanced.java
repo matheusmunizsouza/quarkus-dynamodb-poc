@@ -16,6 +16,15 @@ public final class PersonEnhanced {
   private String lastName;
   private String cpf;
 
+  public PersonEnhanced() {
+  }
+
+  public PersonEnhanced(String firstName, String lastName, String cpf) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.cpf = cpf;
+  }
+
   @DynamoDbPartitionKey
   @DynamoDbAttribute("firstName")
   public String getFirstName() {
