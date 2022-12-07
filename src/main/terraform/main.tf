@@ -13,8 +13,8 @@ provider "aws" {
 resource "aws_dynamodb_table" "dynamodb-table" {
   name           = "person"
   billing_mode   = "PROVISIONED"
-  read_capacity  = 20
-  write_capacity = 20
+  read_capacity  = 1
+  write_capacity = 1
   hash_key       = "firstName"
   range_key      = "lastName"
 
@@ -36,8 +36,8 @@ resource "aws_dynamodb_table" "dynamodb-table" {
   global_secondary_index {
     name            = "cpf_index"
     hash_key        = "cpf"
-    write_capacity  = 10
-    read_capacity   = 10
+    write_capacity  = 1
+    read_capacity   = 1
     projection_type = "ALL"
   }
 }
