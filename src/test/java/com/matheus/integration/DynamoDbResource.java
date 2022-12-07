@@ -21,6 +21,9 @@ public class DynamoDbResource implements QuarkusTestResourceLifecycleManager {
 
   @Override
   public void stop() {
-    dynamodb.stop();
+    if (dynamodb != null) {
+      dynamodb.stop();
+      dynamodb = null;
+    }
   }
 }

@@ -45,13 +45,10 @@ class PersonSyncIntegrationTest {
 
   @Test
   @DisplayName("Should find all persons successfully")
-  void ShouldFindAllPersonsSuccessfully() {
+  void shouldFindAllPersonsSuccessfully() {
     DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(PersonEnhanced.TABLE_NAME,
         TableSchema.fromBean(PersonEnhanced.class));
-
-    PersonEnhanced person = new PersonEnhanced("firstNameTest", "lastNameTest", "cpfTest");
-
-    table.putItem(person);
+    table.putItem(new PersonEnhanced("firstNameTest", "lastNameTest", "cpfTest"));
 
     given()
         .when()
@@ -63,8 +60,23 @@ class PersonSyncIntegrationTest {
   }
 
   @Test
+  @DisplayName("Should find person by firstname successfully")
+  void shouldFindPersonByFirstNameSuccessfully() {
+    DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(PersonEnhanced.TABLE_NAME,
+        TableSchema.fromBean(PersonEnhanced.class));
+    table.putItem(new PersonEnhanced("firstNameTest", "lastNameTest", "cpfTest"));
+
+    given()
+        .when()
+        .get("/sync/person/firstname/firstNameTest")
+        .then()
+        .statusCode(200)
+        .body(is("{\"items\":[{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfTest\"}],\"size\":1,\"lastEvaluatedKey\":{}}"));
+  }
+
+  @Test
   @DisplayName("Should create person successfully")
-  void ShouldCreatePersonSuccessfully() {
+  void shouldCreatePersonSuccessfully() {
     PersonEnhanced person = new PersonEnhanced("firstNameCreateTest", "lastNameCreateTest",
         "cpfCreateTest");
 
