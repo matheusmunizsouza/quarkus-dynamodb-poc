@@ -11,11 +11,11 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 import software.amazon.awssdk.services.dynamodb.model.Condition;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
-import software.amazon.awssdk.services.dynamodb.model.DeleteItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
@@ -82,6 +82,7 @@ public class PersonService {
         .tableName(Person.TABLE_NAME)
         .keyConditions(Map.of(Person.CPF_COLUMN, condition))
         .limit(paginationRequest.getLimit())
+        .indexName(Person.CPF_INDEX)
         .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
         .build();
 
@@ -101,9 +102,13 @@ public class PersonService {
     return person;
   }
 
-  public Person delete(final String firstName) {
+  public Person delete(final String firstName, final String lastName) {
     DeleteItemRequest deleteItemRequest = DeleteItemRequest.builder()
-        .key(Map.of(Person.FIRST_NAME_COLUMN, AttributeValue.builder().s(firstName).build()))
+        .tableName(Person.TABLE_NAME)
+        .key(Map.of(
+            Person.FIRST_NAME_COLUMN, AttributeValue.builder().s(firstName).build(),
+            Person.LAST_NAME_COLUMN, AttributeValue.builder().s(lastName).build()))
+        .returnValues(ReturnValue.ALL_OLD)
         .build();
 
     return Person.from(dynamoDbClient.deleteItem(deleteItemRequest).attributes());
@@ -111,11 +116,16 @@ public class PersonService {
 
   public Person update(final Person person) {
     UpdateItemRequest updateItemRequest = UpdateItemRequest.builder()
-        .key(Map.of(Person.FIRST_NAME_COLUMN,
-            AttributeValue.builder().s(person.getFirstName()).build()))
+        .tableName(Person.TABLE_NAME)
+        .key(Map.of(
+            Person.FIRST_NAME_COLUMN, AttributeValue.builder().s(person.getFirstName()).build(),
+            Person.LAST_NAME_COLUMN, AttributeValue.builder().s(person.getLastName()).build()))
+        .updateExpression("SET cpf = :newValue")
+        .expressionAttributeValues(
+            Map.of(":newValue", AttributeValue.builder().s(person.getCpf()).build()))
+        .returnValues(ReturnValue.ALL_NEW)
         .build();
 
-    dynamoDbClient.updateItem(updateItemRequest);
-    return person;
+    return Person.from(dynamoDbClient.updateItem(updateItemRequest).attributes());
   }
 }

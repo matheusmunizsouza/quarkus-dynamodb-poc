@@ -26,7 +26,7 @@ import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 @QuarkusTest
-@QuarkusTestResource(DynamoDbResource.class)
+@QuarkusTestResource(DynamoDbResourceTest.class)
 class PersonSyncIntegrationTest {
 
   @Inject
@@ -81,6 +81,44 @@ class PersonSyncIntegrationTest {
   }
 
   @Test
+  @DisplayName("Should find person by firstname and lastname successfully")
+  void shouldFindPersonByFirstNameAndLastNameSuccessfully() {
+    PutItemRequest putItemRequest = PutItemRequest.builder()
+        .tableName(Person.TABLE_NAME)
+        .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
+        .build();
+
+    dynamoDbClient.putItem(putItemRequest);
+
+    given()
+        .when()
+        .get("/sync/person/firstname/firstNameTest/lastname/lastNameTest")
+        .then()
+        .statusCode(200)
+        .body(
+            is("{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfTest\"}"));
+  }
+
+  @Test
+  @DisplayName("Should find person by cpf successfully")
+  void shouldFindPersonByCpfSuccessfully() {
+    PutItemRequest putItemRequest = PutItemRequest.builder()
+        .tableName(Person.TABLE_NAME)
+        .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
+        .build();
+
+    dynamoDbClient.putItem(putItemRequest);
+
+    given()
+        .when()
+        .get("/sync/person/cpf/cpfTest")
+        .then()
+        .statusCode(200)
+        .body(
+            is("{\"items\":[{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfTest\"}],\"size\":1,\"lastEvaluatedKey\":{}}"));
+  }
+
+  @Test
   @DisplayName("Should create person successfully")
   void shouldCreatePersonSuccessfully() {
     Person person = Person.of("firstNameCreateTest", "lastNameCreateTest",
@@ -95,6 +133,49 @@ class PersonSyncIntegrationTest {
         .statusCode(200)
         .body(
             is("{\"firstName\":\"firstNameCreateTest\",\"lastName\":\"lastNameCreateTest\",\"cpf\":\"cpfCreateTest\"}"));
+  }
+
+  @Test
+  @DisplayName("Should delete person successfully")
+  void shouldDeletePersonSuccessfully() {
+    PutItemRequest putItemRequest = PutItemRequest.builder()
+        .tableName(Person.TABLE_NAME)
+        .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
+        .build();
+
+    dynamoDbClient.putItem(putItemRequest);
+
+    given()
+        .when()
+        .delete("/sync/person/firstname/firstNameTest/lastname/lastNameTest")
+        .then()
+        .statusCode(200)
+        .body(
+            is("{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfTest\"}"));
+  }
+
+  @Test
+  @DisplayName("Should update person successfully")
+  void shouldDeleteUpdateSuccessfully() {
+    PutItemRequest putItemRequest = PutItemRequest.builder()
+        .tableName(Person.TABLE_NAME)
+        .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
+        .build();
+
+    dynamoDbClient.putItem(putItemRequest);
+
+    Person person = Person.of("firstNameTest", "lastNameTest",
+        "cpfUpdatedTest");
+
+    given()
+        .when()
+        .body(person)
+        .contentType(ContentType.JSON)
+        .put("/sync/person")
+        .then()
+        .statusCode(200)
+        .body(
+            is("{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfUpdatedTest\"}"));
   }
 
   private void createPersonTable() {

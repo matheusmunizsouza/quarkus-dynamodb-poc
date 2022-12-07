@@ -4,7 +4,7 @@ import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import java.util.Map;
 import org.testcontainers.containers.GenericContainer;
 
-public class DynamoDbResource implements QuarkusTestResourceLifecycleManager {
+public class DynamoDbResourceTest implements QuarkusTestResourceLifecycleManager {
 
   private GenericContainer dynamodb;
 

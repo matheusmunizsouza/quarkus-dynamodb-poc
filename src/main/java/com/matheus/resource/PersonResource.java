@@ -65,10 +65,12 @@ public class PersonResource {
   }
 
   @DELETE
-  @Path("/{firstName}")
+  @Path("/firstname/{firstName}/lastname/{lastName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Person delete(@PathParam("firstName") final String firstName) {
-    return personService.delete(firstName);
+  public Person delete(
+      @PathParam("firstName") final String firstName,
+      @PathParam("lastName") final String lastName) {
+    return personService.delete(firstName, lastName);
   }
 
   @PUT

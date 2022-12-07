@@ -10,6 +10,7 @@ public final class Person {
   public static final String FIRST_NAME_COLUMN = "firstName";
   public static final String LAST_NAME_COLUMN = "lastName";
   public static final String CPF_COLUMN = "cpf";
+  public static final String CPF_INDEX = "cpf_index";
 
   private final String firstName;
   private final String lastName;
