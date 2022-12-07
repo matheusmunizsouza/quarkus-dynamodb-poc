@@ -21,6 +21,10 @@ public final class Person {
     this.cpf = cpf;
   }
 
+  public static Person of(String firstName, String lastName, String cpf) {
+    return new Person(firstName, lastName, cpf);
+  }
+
   public static Person from(Map<String, AttributeValue> item) {
     if (item == null || item.isEmpty()) {
       throw new IllegalArgumentException("Item is null or empty");
