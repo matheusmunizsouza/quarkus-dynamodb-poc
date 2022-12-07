@@ -33,8 +33,10 @@ public class PersonResource {
   @GET
   @Path("/firstname/{firstName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Person findByFirstName(@PathParam("firstName") final String firstName) {
-    return personService.findByFirstName(firstName);
+  public PaginationResponse<Person> findByFirstName(
+      @PathParam("firstName") final String firstName,
+      final PaginationRequest paginationRequest) {
+    return personService.findByFirstName(firstName, paginationRequest);
   }
 
   @GET

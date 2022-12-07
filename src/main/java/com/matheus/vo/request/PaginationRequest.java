@@ -1,6 +1,5 @@
 package com.matheus.vo.request;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.QueryParam;
@@ -27,7 +26,7 @@ public final class PaginationRequest {
       }
       return keys;
     } else {
-      return Collections.emptyMap();
+      return null;
     }
   }
 }

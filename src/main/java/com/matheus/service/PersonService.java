@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 import software.amazon.awssdk.services.dynamodb.model.Condition;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DeleteItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
@@ -37,14 +38,24 @@ public class PersonService {
         .toList();
   }
 
-  public Person findByFirstName(final String firstName) {
-    GetItemRequest getItemRequest = GetItemRequest.builder()
-        .tableName(Person.TABLE_NAME)
-        .key(Map.of(Person.FIRST_NAME_COLUMN, AttributeValue.builder().s(firstName).build()))
+  public PaginationResponse<Person> findByFirstName(final String firstName,
+      final PaginationRequest paginationRequest) {
+    Condition condition = Condition.builder()
+        .comparisonOperator(ComparisonOperator.EQ)
+        .attributeValueList(AttributeValue.builder().s(firstName).build())
         .build();
 
-    return Person.from(dynamoDbClient.getItem(getItemRequest)
-        .item());
+    QueryRequest queryRequest = QueryRequest.builder()
+        .tableName(Person.TABLE_NAME)
+        .keyConditions(Map.of(Person.FIRST_NAME_COLUMN, condition))
+        .limit(paginationRequest.getLimit())
+        .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
+        .build();
+
+    QueryResponse queryResponse = dynamoDbClient.query(queryRequest);
+
+    return PaginationResponse.of(queryResponse.items().stream().map(Person::from).toList(),
+        queryResponse.lastEvaluatedKey());
   }
 
   public Person findByFirstNameAndLastName(final String firstName, final String lastName) {
@@ -95,8 +106,7 @@ public class PersonService {
         .key(Map.of(Person.FIRST_NAME_COLUMN, AttributeValue.builder().s(firstName).build()))
         .build();
 
-    dynamoDbClient.deleteItem(deleteItemRequest);
-    return findByFirstName(firstName);
+    return Person.from(dynamoDbClient.deleteItem(deleteItemRequest).attributes());
   }
 
   public Person update(final Person person) {
