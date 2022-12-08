@@ -13,6 +13,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvFileSource;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
@@ -42,9 +44,10 @@ class PersonSyncIntegrationTest {
     deletePersonTable();
   }
 
-  @Test
-  @DisplayName("Should find all persons successfully")
-  void shouldFindAllPersonsSuccessfully() {
+  @ParameterizedTest
+  @DisplayName("Should find person successfully")
+  @CsvFileSource(resources = "/FindPersonSyncTestData.csv", numLinesToSkip = 1, delimiter = '|')
+  void shouldPersonSuccessfully(final String url, final String expectedResponse) {
     PutItemRequest putItemRequest = PutItemRequest.builder()
         .tableName(Person.TABLE_NAME)
         .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
@@ -54,68 +57,11 @@ class PersonSyncIntegrationTest {
 
     given()
         .when()
-        .get("/sync/person")
+        .get(url)
         .then()
         .statusCode(200)
         .body(
-            is("[{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfTest\"}]"));
-  }
-
-  @Test
-  @DisplayName("Should find person by firstname successfully")
-  void shouldFindPersonByFirstNameSuccessfully() {
-    PutItemRequest putItemRequest = PutItemRequest.builder()
-        .tableName(Person.TABLE_NAME)
-        .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
-        .build();
-
-    dynamoDbClient.putItem(putItemRequest);
-
-    given()
-        .when()
-        .get("/sync/person/firstname/firstNameTest")
-        .then()
-        .statusCode(200)
-        .body(
-            is("{\"items\":[{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfTest\"}],\"size\":1,\"lastEvaluatedKey\":{}}"));
-  }
-
-  @Test
-  @DisplayName("Should find person by firstname and lastname successfully")
-  void shouldFindPersonByFirstNameAndLastNameSuccessfully() {
-    PutItemRequest putItemRequest = PutItemRequest.builder()
-        .tableName(Person.TABLE_NAME)
-        .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
-        .build();
-
-    dynamoDbClient.putItem(putItemRequest);
-
-    given()
-        .when()
-        .get("/sync/person/firstname/firstNameTest/lastname/lastNameTest")
-        .then()
-        .statusCode(200)
-        .body(
-            is("{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfTest\"}"));
-  }
-
-  @Test
-  @DisplayName("Should find person by cpf successfully")
-  void shouldFindPersonByCpfSuccessfully() {
-    PutItemRequest putItemRequest = PutItemRequest.builder()
-        .tableName(Person.TABLE_NAME)
-        .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
-        .build();
-
-    dynamoDbClient.putItem(putItemRequest);
-
-    given()
-        .when()
-        .get("/sync/person/cpf/cpfTest")
-        .then()
-        .statusCode(200)
-        .body(
-            is("{\"items\":[{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfTest\"}],\"size\":1,\"lastEvaluatedKey\":{}}"));
+            is(expectedResponse));
   }
 
   @Test
