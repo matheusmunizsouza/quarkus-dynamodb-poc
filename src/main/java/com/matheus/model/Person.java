@@ -52,32 +52,4 @@ public final class Person {
   public String getCpf() {
     return cpf;
   }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    Person person = (Person) o;
-    return firstName.equals(person.firstName) && lastName.equals(person.lastName) && Objects.equals(
-        cpf,
-        person.cpf);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(firstName, lastName, cpf);
-  }
-
-  @Override
-  public String toString() {
-    return "Person{" +
-        "firstName='" + firstName + '\'' +
-        ", lastName='" + lastName + '\'' +
-        ", cpf='" + cpf + '\'' +
-        '}';
-  }
 }

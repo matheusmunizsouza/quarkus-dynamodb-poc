@@ -33,8 +33,10 @@ public class PersonEnhancedResource {
   @GET
   @Path("/firstname/{firstName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public PersonEnhanced findByFirstName(@PathParam("firstName") final String firstName) {
-    return personEnhancedService.findByFirstName(firstName);
+  public PaginationResponse<PersonEnhanced> findByFirstName(
+      @PathParam("firstName") final String firstName,
+      final PaginationRequest paginationRequest) {
+    return personEnhancedService.findByFirstName(firstName, paginationRequest);
   }
 
   @GET
@@ -63,10 +65,12 @@ public class PersonEnhancedResource {
   }
 
   @DELETE
-  @Path("/{firstName}")
+  @Path("/firstname/{firstName}/lastname/{lastName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public PersonEnhanced delete(@PathParam("firstName") final String firstName) {
-    return personEnhancedService.delete(firstName);
+  public PersonEnhanced delete(
+      @PathParam("firstName") final String firstName,
+      @PathParam("lastName") final String lastName) {
+    return personEnhancedService.delete(firstName, lastName);
   }
 
   @PUT

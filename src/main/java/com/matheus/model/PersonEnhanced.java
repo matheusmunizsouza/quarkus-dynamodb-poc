@@ -25,6 +25,10 @@ public final class PersonEnhanced {
     this.cpf = cpf;
   }
 
+  public static PersonEnhanced of(String firstName, String lastName, String cpf) {
+    return new PersonEnhanced(firstName, lastName, cpf);
+  }
+
   @DynamoDbPartitionKey
   @DynamoDbAttribute("firstName")
   public String getFirstName() {
@@ -53,23 +57,5 @@ public final class PersonEnhanced {
 
   public void setCpf(String cpf) {
     this.cpf = cpf;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    PersonEnhanced personEnhanced = (PersonEnhanced) o;
-    return firstName.equals(personEnhanced.firstName) && lastName.equals(personEnhanced.lastName)
-        && Objects.equals(cpf, personEnhanced.cpf);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(firstName, lastName, cpf);
   }
 }

@@ -11,7 +11,9 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
@@ -30,13 +32,21 @@ public class PersonEnhancedService {
     return table.scan().items().stream().toList();
   }
 
-  public PersonEnhanced findByFirstName(final String firstName) {
+  public PaginationResponse<PersonEnhanced> findByFirstName(final String firstName,
+      final PaginationRequest paginationRequest) {
 
     DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
         PersonEnhanced.TABLE_NAME,
         TableSchema.fromBean(PersonEnhanced.class));
 
-    return table.getItem(Key.builder().partitionValue(firstName).build());
+    PageIterable<PersonEnhanced> pages = table.query(QueryEnhancedRequest.builder()
+        .queryConditional(
+            QueryConditional.keyEqualTo(Key.builder().partitionValue(firstName).build()))
+        .limit(paginationRequest.getLimit())
+        .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
+        .build());
+
+    return PaginationResponse.from(pages.iterator().next());
   }
 
   public PersonEnhanced findByFirstNameAndLastName(final String firstName, final String lastName) {
@@ -73,11 +83,19 @@ public class PersonEnhancedService {
     return person;
   }
 
-  public PersonEnhanced delete(final String firstName) {
+  public PersonEnhanced delete(final String firstName, final String lastName) {
     DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
         PersonEnhanced.TABLE_NAME,
         TableSchema.fromBean(PersonEnhanced.class));
-    return table.deleteItem(Key.builder().partitionValue(firstName).build());
+
+    DeleteItemEnhancedRequest deleteItemEnhancedRequest = DeleteItemEnhancedRequest.builder()
+        .key(builder -> builder
+            .partitionValue(firstName)
+            .sortValue(lastName)
+            .build())
+        .build();
+
+    return table.deleteItem(deleteItemEnhancedRequest);
   }
 
   public PersonEnhanced update(final PersonEnhanced person) {

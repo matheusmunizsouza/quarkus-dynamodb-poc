@@ -1,4 +1,4 @@
-package com.matheus.integration;
+package com.matheus.component;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
@@ -29,7 +29,7 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 @QuarkusTest
 @QuarkusTestResource(DynamoDbResourceTest.class)
-class PersonSyncIntegrationTest {
+class PersonSyncComponentTest {
 
   @Inject
   DynamoDbClient dynamoDbClient;
@@ -56,9 +56,11 @@ class PersonSyncIntegrationTest {
     dynamoDbClient.putItem(putItemRequest);
 
     given()
+        .log().ifValidationFails()
         .when()
         .get(url)
         .then()
+        .log().ifValidationFails()
         .statusCode(200)
         .body(
             is(expectedResponse));
@@ -71,11 +73,13 @@ class PersonSyncIntegrationTest {
         "cpfCreateTest");
 
     given()
+        .log().ifValidationFails()
         .when()
         .body(person)
         .contentType(ContentType.JSON)
         .post("/sync/person")
         .then()
+        .log().ifValidationFails()
         .statusCode(200)
         .body(
             is("{\"firstName\":\"firstNameCreateTest\",\"lastName\":\"lastNameCreateTest\",\"cpf\":\"cpfCreateTest\"}"));
@@ -92,9 +96,11 @@ class PersonSyncIntegrationTest {
     dynamoDbClient.putItem(putItemRequest);
 
     given()
+        .log().ifValidationFails()
         .when()
         .delete("/sync/person/firstname/firstNameTest/lastname/lastNameTest")
         .then()
+        .log().ifValidationFails()
         .statusCode(200)
         .body(
             is("{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfTest\"}"));
@@ -102,7 +108,7 @@ class PersonSyncIntegrationTest {
 
   @Test
   @DisplayName("Should update person successfully")
-  void shouldDeleteUpdateSuccessfully() {
+  void shouldUpdateSuccessfully() {
     PutItemRequest putItemRequest = PutItemRequest.builder()
         .tableName(Person.TABLE_NAME)
         .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
@@ -114,11 +120,13 @@ class PersonSyncIntegrationTest {
         "cpfUpdatedTest");
 
     given()
+        .log().ifValidationFails()
         .when()
         .body(person)
         .contentType(ContentType.JSON)
         .put("/sync/person")
         .then()
+        .log().ifValidationFails()
         .statusCode(200)
         .body(
             is("{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfUpdatedTest\"}"));
