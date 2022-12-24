@@ -7,8 +7,10 @@ import com.matheus.vo.response.PaginationResponse;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -32,8 +34,10 @@ public class PersonEnhancedAsyncResource {
   @GET
   @Path("/firstname/{firstName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<PersonEnhanced> findByFirstName(@PathParam("firstName") final String firstName) {
-    return personEnhancedAsyncService.findByFirstName(firstName);
+  public Uni<PaginationResponse<PersonEnhanced>> findByFirstName(
+      @PathParam("firstName") final String firstName,
+      final PaginationRequest paginationRequest) {
+    return personEnhancedAsyncService.findByFirstName(firstName, paginationRequest);
   }
 
   @GET
@@ -59,5 +63,21 @@ public class PersonEnhancedAsyncResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<PersonEnhanced> add(final PersonEnhanced book) {
     return personEnhancedAsyncService.add(book);
+  }
+
+  @DELETE
+  @Path("/firstname/{firstName}/lastname/{lastName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<PersonEnhanced> delete(
+      @PathParam("firstName") final String firstName,
+      @PathParam("lastName") final String lastName) {
+    return personEnhancedAsyncService.delete(firstName, lastName);
+  }
+
+  @PUT
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<PersonEnhanced> update(final PersonEnhanced person) {
+    return personEnhancedAsyncService.update(person);
   }
 }

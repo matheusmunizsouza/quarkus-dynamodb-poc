@@ -33,13 +33,20 @@ public class PersonEnhancedAsyncService {
         .transformToMultiAndConcatenate(PagePublisher::items);
   }
 
-  public Uni<PersonEnhanced> findByFirstName(final String firstName) {
+  public Uni<PaginationResponse<PersonEnhanced>> findByFirstName(final String firstName,
+      final PaginationRequest paginationRequest) {
     return Uni.createFrom()
-        .item(() -> dynamoDbEnhancedAsyncClient.table(PersonEnhanced.TABLE_NAME,
+        .item(dynamoDbEnhancedAsyncClient.table(PersonEnhanced.TABLE_NAME,
             TableSchema.fromBean(PersonEnhanced.class)))
-        .map(table -> table.getItem(Key.builder().partitionValue(firstName).build()))
+        .map(table -> table.query(QueryEnhancedRequest.builder()
+            .queryConditional(
+                QueryConditional.keyEqualTo(Key.builder().partitionValue(firstName).build()))
+            .limit(paginationRequest.getLimit())
+            .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
+            .build()))
         .onItem()
-        .transform(CompletableFuture::join);
+        .transformToUni(publisher -> Uni.createFrom().publisher(publisher))
+        .map(PaginationResponse::from);
   }
 
   public Uni<PersonEnhanced> findByFirstNameAndLastName(
@@ -62,8 +69,8 @@ public class PersonEnhancedAsyncService {
         .map(table -> table.query(QueryEnhancedRequest.builder()
             .queryConditional(
                 QueryConditional.keyEqualTo(Key.builder().partitionValue(cpf).build()))
-                .limit(paginationRequest.getLimit())
-                .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
+            .limit(paginationRequest.getLimit())
+            .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
             .build()))
         .onItem()
         .transformToUni(publisher -> Uni.createFrom().publisher(publisher))
@@ -76,18 +83,19 @@ public class PersonEnhancedAsyncService {
             TableSchema.fromBean(PersonEnhanced.class)))
         .map(table -> table.putItem(person))
         .onItem()
-        .ignore()
-        .andSwitchTo(() -> findByFirstName(person.getFirstName()));
+        .transform(response -> person);
   }
 
-  public Uni<PersonEnhanced> delete(final String firstName) {
+  public Uni<PersonEnhanced> delete(final String firstName, final String lastName) {
     return Uni.createFrom()
         .item(() -> dynamoDbEnhancedAsyncClient.table(PersonEnhanced.TABLE_NAME,
             TableSchema.fromBean(PersonEnhanced.class)))
-        .map(table -> table.deleteItem(Key.builder().partitionValue(firstName).build()))
+        .map(table -> table.deleteItem(Key.builder()
+            .partitionValue(firstName)
+                .sortValue(lastName)
+            .build()))
         .onItem()
-        .ignore()
-        .andSwitchTo(() -> findByFirstName(firstName));
+        .transform(CompletableFuture::join);
   }
 
   public Uni<PersonEnhanced> update(final PersonEnhanced person) {
@@ -96,7 +104,6 @@ public class PersonEnhancedAsyncService {
             TableSchema.fromBean(PersonEnhanced.class)))
         .map(table -> table.updateItem(person))
         .onItem()
-        .ignore()
-        .andSwitchTo(() -> findByFirstName(person.getFirstName()));
+        .transform(CompletableFuture::join);
   }
 }
