@@ -30,7 +30,7 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 @QuarkusTest
 @QuarkusTestResource(DynamoDbResourceTest.class)
-class PersonSyncComponentTest {
+class PersonAsyncComponentTest {
 
   @Inject
   DynamoDbClient dynamoDbClient;
@@ -47,7 +47,7 @@ class PersonSyncComponentTest {
 
   @ParameterizedTest
   @DisplayName("Should find person successfully")
-  @CsvFileSource(resources = "/FindPersonSyncTestData.csv", numLinesToSkip = 1, delimiter = '|')
+  @CsvFileSource(resources = "/FindPersonAsyncTestData.csv", numLinesToSkip = 1, delimiter = '|')
   void shouldPersonSuccessfully(final String url, final String expectedResponse) {
     PutItemRequest putItemRequest = PutItemRequest.builder()
         .tableName(Person.TABLE_NAME)
@@ -78,7 +78,7 @@ class PersonSyncComponentTest {
         .when()
         .body(person)
         .contentType(ContentType.JSON)
-        .post("/sync/person")
+        .post("/async/person")
         .then()
         .log().ifValidationFails()
         .statusCode(200)
@@ -99,7 +99,7 @@ class PersonSyncComponentTest {
     given()
         .log().ifValidationFails()
         .when()
-        .delete("/sync/person/firstname/firstNameTest/lastname/lastNameTest")
+        .delete("/async/person/firstname/firstNameTest/lastname/lastNameTest")
         .then()
         .log().ifValidationFails()
         .statusCode(200)
@@ -125,7 +125,7 @@ class PersonSyncComponentTest {
         .when()
         .body(person)
         .contentType(ContentType.JSON)
-        .put("/sync/person")
+        .put("/async/person")
         .then()
         .log().ifValidationFails()
         .statusCode(200)
@@ -207,4 +207,5 @@ class PersonSyncComponentTest {
         .build();
     dynamoDbClient.deleteTable(deleteTableRequest);
   }
+
 }

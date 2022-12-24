@@ -1,4 +1,4 @@
-package com.matheus.component;
+package com.matheus.component.resources;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import java.util.Map;

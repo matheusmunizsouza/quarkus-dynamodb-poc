@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
@@ -34,11 +35,16 @@ public class PersonAsyncService {
         .transformToIterable(res -> res.items().stream().map(Person::from).toList());
   }
 
-  public Uni<Person> findByFirstName(final String firstName) {
+  public Uni<PaginationResponse<Person>> findByFirstName(final String firstName,
+      final PaginationRequest paginationRequest) {
+
     return Uni.createFrom()
-        .completionStage(() -> dynamoDbAsyncClient.getItem(getRequest(firstName)))
+        .completionStage(dynamoDbAsyncClient.query(
+            getFindByFirstNameQueryRequest(firstName, paginationRequest)))
         .onItem()
-        .transform(res -> Person.from(res.item()));
+        .transform(
+            response -> PaginationResponse.of(response.items().stream().map(Person::from).toList(),
+                response.lastEvaluatedKey()));
   }
 
   public Uni<Person> findByFirstNameAndLastName(final String firstName, final String lastName) {
@@ -52,7 +58,7 @@ public class PersonAsyncService {
       final PaginationRequest paginationRequest) {
     return Uni.createFrom()
         .completionStage(() -> dynamoDbAsyncClient.query(
-            getQueryRequest(paginationRequest, cpf)))
+            getFindByCpfQueryRequest(paginationRequest, cpf)))
         .onItem()
         .transform(res -> PaginationResponse.of(res.items().stream().map(Person::from).toList(),
             res.lastEvaluatedKey()));
@@ -62,32 +68,22 @@ public class PersonAsyncService {
     return Uni.createFrom()
         .completionStage(() -> dynamoDbAsyncClient.putItem(putRequest(person)))
         .onItem()
-        .ignore()
-        .andSwitchTo(() -> findByFirstName(person.getFirstName()));
+        .transform(response -> person);
   }
 
-  public Uni<Person> delete(final String firstName) {
+  public Uni<Person> delete(final String firstName, final String lastName) {
     return Uni.createFrom()
-        .completionStage(() -> dynamoDbAsyncClient.deleteItem(
-            DeleteItemRequest.builder()
-                .key(
-                    Map.of(Person.FIRST_NAME_COLUMN, AttributeValue.builder().s(firstName).build()))
-                .build()))
+        .completionStage(
+            () -> dynamoDbAsyncClient.deleteItem(getDeleteItemRequest(firstName, lastName)))
         .onItem()
-        .ignore()
-        .andSwitchTo(() -> findByFirstName(firstName));
+        .transform(response -> Person.from(response.attributes()));
   }
 
   public Uni<Person> update(final Person person) {
     return Uni.createFrom()
-        .completionStage(() -> dynamoDbAsyncClient.updateItem(
-            UpdateItemRequest.builder()
-                .key(Map.of(Person.FIRST_NAME_COLUMN,
-                    AttributeValue.builder().s(person.getFirstName()).build()))
-                .build()))
+        .completionStage(() -> dynamoDbAsyncClient.updateItem(getUpdateItemRequest(person)))
         .onItem()
-        .ignore()
-        .andSwitchTo(() -> findByFirstName(person.getFirstName()));
+        .transform(response -> Person.from(response.attributes()));
   }
 
   private static ScanRequest scanRequest() {
@@ -96,10 +92,20 @@ public class PersonAsyncService {
         .build();
   }
 
-  private GetItemRequest getRequest(final String firstName) {
-    return GetItemRequest.builder()
+  private QueryRequest getFindByFirstNameQueryRequest(String firstName,
+      PaginationRequest paginationRequest) {
+    return QueryRequest.builder()
         .tableName(Person.TABLE_NAME)
-        .key(Map.of(Person.FIRST_NAME_COLUMN, AttributeValue.builder().s(firstName).build()))
+        .keyConditions(Map.of(Person.FIRST_NAME_COLUMN, getFindByFirstNameCondition(firstName)))
+        .limit(paginationRequest.getLimit())
+        .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
+        .build();
+  }
+
+  private Condition getFindByFirstNameCondition(String firstName) {
+    return Condition.builder()
+        .comparisonOperator(ComparisonOperator.EQ)
+        .attributeValueList(AttributeValue.builder().s(firstName).build())
         .build();
   }
 
@@ -112,6 +118,24 @@ public class PersonAsyncService {
         .build();
   }
 
+  private static QueryRequest getFindByCpfQueryRequest(
+      final PaginationRequest paginationRequest, final String cpf) {
+    return QueryRequest.builder()
+        .tableName(Person.TABLE_NAME)
+        .keyConditions(Map.of(Person.CPF_COLUMN, getFindByCpfCondition(cpf)))
+        .limit(paginationRequest.getLimit())
+        .indexName(Person.CPF_INDEX)
+        .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
+        .build();
+  }
+
+  private static Condition getFindByCpfCondition(final String cpf) {
+    return Condition.builder()
+        .comparisonOperator(ComparisonOperator.EQ)
+        .attributeValueList(AttributeValue.builder().s(cpf).build())
+        .build();
+  }
+
   private PutItemRequest putRequest(final Person person) {
     return PutItemRequest.builder()
         .tableName(Person.TABLE_NAME)
@@ -119,20 +143,26 @@ public class PersonAsyncService {
         .build();
   }
 
-  private static QueryRequest getQueryRequest(
-      final PaginationRequest paginationRequest, final String cpf) {
-    return QueryRequest.builder()
+  private DeleteItemRequest getDeleteItemRequest(String firstName, String lastName) {
+    return DeleteItemRequest.builder()
         .tableName(Person.TABLE_NAME)
-        .keyConditions(Map.of(Person.CPF_COLUMN, getCondition(cpf)))
-        .limit(paginationRequest.getLimit())
-        .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
+        .key(Map.of(
+            Person.FIRST_NAME_COLUMN, AttributeValue.builder().s(firstName).build(),
+            Person.LAST_NAME_COLUMN, AttributeValue.builder().s(lastName).build()))
+        .returnValues(ReturnValue.ALL_OLD)
         .build();
   }
 
-  private static Condition getCondition(final String cpf) {
-    return Condition.builder()
-        .comparisonOperator(ComparisonOperator.EQ)
-        .attributeValueList(AttributeValue.builder().s(cpf).build())
+  private static UpdateItemRequest getUpdateItemRequest(Person person) {
+    return UpdateItemRequest.builder()
+        .tableName(Person.TABLE_NAME)
+        .key(Map.of(
+            Person.FIRST_NAME_COLUMN, AttributeValue.builder().s(person.getFirstName()).build(),
+            Person.LAST_NAME_COLUMN, AttributeValue.builder().s(person.getLastName()).build()))
+        .updateExpression("SET cpf = :newValue")
+        .expressionAttributeValues(
+            Map.of(":newValue", AttributeValue.builder().s(person.getCpf()).build()))
+        .returnValues(ReturnValue.ALL_NEW)
         .build();
   }
 }

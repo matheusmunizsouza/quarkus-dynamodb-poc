@@ -34,8 +34,10 @@ public class PersonAsyncResource {
   @GET
   @Path("/firstname/{firstName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Person> findByFirstName(@PathParam("firstName") final String firstName) {
-    return personAsyncService.findByFirstName(firstName);
+  public Uni<PaginationResponse<Person>> findByFirstName(
+      @PathParam("firstName") final String firstName,
+      final PaginationRequest paginationRequest) {
+    return personAsyncService.findByFirstName(firstName, paginationRequest);
   }
 
   @GET
@@ -64,10 +66,12 @@ public class PersonAsyncResource {
   }
 
   @DELETE
-  @Path("/{firstName}")
+  @Path("/firstname/{firstName}/lastname/{lastName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Person> delete(@PathParam("firstName") final String firstName) {
-    return personAsyncService.delete(firstName);
+  public Uni<Person> delete(
+      @PathParam("firstName") final String firstName,
+      @PathParam("lastName") final String lastName) {
+    return personAsyncService.delete(firstName, lastName);
   }
 
   @PUT

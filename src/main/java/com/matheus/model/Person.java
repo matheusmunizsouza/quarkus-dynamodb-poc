@@ -1,7 +1,6 @@
 package com.matheus.model;
 
 import java.util.Map;
-import java.util.Objects;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public final class Person {

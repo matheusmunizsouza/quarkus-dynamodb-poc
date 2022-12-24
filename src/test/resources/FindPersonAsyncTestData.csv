@@ -1,0 +1,5 @@
+url|expectedResponse
+/async/person|[{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}]
+/async/person/firstname/firstNameTest|{"items":[{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}],"size":1,"lastEvaluatedKey":{}}
+/async/person/firstname/firstNameTest/lastname/lastNameTest|{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}
+/async/person/cpf/cpfTest|{"items":[{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}],"size":1,"lastEvaluatedKey":{}}

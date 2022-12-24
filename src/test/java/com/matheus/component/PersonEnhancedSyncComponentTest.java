@@ -3,6 +3,7 @@ package com.matheus.component;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
+import com.matheus.component.resources.DynamoDbResourceTest;
 import com.matheus.model.Person;
 import com.matheus.model.PersonEnhanced;
 import io.quarkus.test.common.QuarkusTestResource;
