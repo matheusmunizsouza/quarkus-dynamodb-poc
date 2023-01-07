@@ -31,14 +31,14 @@ public final class PaginationResponse<T> {
         transformLastEvaluatedKey(page.iterator().next().lastEvaluatedKey()));
   }
 
-  public static <T> PaginationResponse<T> of(List<T> items,
-      Map<String, AttributeValue> lastEvaluatedKey) {
+  public static <T> PaginationResponse<T> of(final List<T> items,
+      final Map<String, AttributeValue> lastEvaluatedKey) {
     return new PaginationResponse<>(items, items.size(),
         transformLastEvaluatedKey(lastEvaluatedKey));
   }
 
   private static HashMap<String, String> transformLastEvaluatedKey(
-      Map<String, AttributeValue> lastEvaluatedKey) {
+      final Map<String, AttributeValue> lastEvaluatedKey) {
     HashMap<String, String> keys = new HashMap<>();
     if (lastEvaluatedKey != null) {
       lastEvaluatedKey.forEach((key, attributeValue) -> keys.put(key, attributeValue.s()));
