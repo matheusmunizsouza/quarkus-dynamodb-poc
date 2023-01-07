@@ -4,3 +4,4 @@ path|expectedResponse
 /person/firstname/Person2/lastname/lastNameTest|{"firstName":"Person2","lastName":"lastNameTest","cpf":"86679311032"}
 /person/cpf/86679311033|{"items":[{"firstName":"Person3","lastName":"lastNameTest","cpf":"86679311033"}],"size":1,"lastEvaluatedKey":{}}
 /person?limit=3|"{""items"":[{""firstName"":""Person3"",""lastName"":""lastNameTest"",""cpf"":""86679311033""},{""firstName"":""Person1"",""lastName"":""lastNameTest"",""cpf"":""86679311031""},{""firstName"":""Person5"",""lastName"":""lastNameTest"",""cpf"":""86679311035""}],""size"":3,""lastEvaluatedKey"":{""firstName"":""Person5"",""lastName"":""lastNameTest""}}"
+/person?limit=3&lastEvaluatedKey=firstName:Person5,lastName:lastNameTest|"{""items"":[{""firstName"":""Person2"",""lastName"":""lastNameTest"",""cpf"":""86679311032""},{""firstName"":""Person4"",""lastName"":""lastNameTest"",""cpf"":""86679311034""}],""size"":2,""lastEvaluatedKey"":{}}"
