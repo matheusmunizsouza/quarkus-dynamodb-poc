@@ -12,6 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
 @ApplicationScoped
 public class PersonEnhancedAsyncService {
@@ -22,11 +23,13 @@ public class PersonEnhancedAsyncService {
     this.dynamoDbEnhancedAsyncClient = dynamoDbEnhancedAsyncClient;
   }
 
-  public Uni<PaginationResponse<PersonEnhanced>> findAll() {
+  public Uni<PaginationResponse<PersonEnhanced>> findAll(PaginationRequest paginationRequest) {
     return Uni.createFrom()
         .item(() -> dynamoDbEnhancedAsyncClient.table(
             PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class)))
-        .map(DynamoDbAsyncTable::scan)
+        .map(table -> table.scan(scanRequest -> scanRequest
+            .limit(paginationRequest.getLimit())
+            .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())))
         .onItem()
         .transformToUni(publisher -> Uni.createFrom().publisher(publisher))
         .map(PaginationResponse::from);
@@ -91,7 +94,7 @@ public class PersonEnhancedAsyncService {
             TableSchema.fromBean(PersonEnhanced.class)))
         .map(table -> table.deleteItem(Key.builder()
             .partitionValue(firstName)
-                .sortValue(lastName)
+            .sortValue(lastName)
             .build()))
         .onItem()
         .transform(CompletableFuture::join);

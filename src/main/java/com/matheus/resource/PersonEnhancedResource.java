@@ -25,8 +25,8 @@ public class PersonEnhancedResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public PaginationResponse<PersonEnhanced> findAll() {
-    return personEnhancedService.findAll();
+  public PaginationResponse<PersonEnhanced> findAll(final PaginationRequest paginationRequest) {
+    return personEnhancedService.findAll(paginationRequest);
   }
 
   @GET

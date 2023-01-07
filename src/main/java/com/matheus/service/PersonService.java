@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.paginators.ScanIterable;
 
@@ -35,10 +36,10 @@ public class PersonService {
         .limit(paginationRequest.getLimit())
         .build();
 
-    ScanIterable response = dynamoDbClient.scanPaginator(scanRequest);
+    ScanResponse response = dynamoDbClient.scanPaginator(scanRequest).iterator().next();
 
     return PaginationResponse.of(response.items().stream().map(Person::from).toList(),
-        response.iterator().next().lastEvaluatedKey());
+        response.lastEvaluatedKey());
   }
 
   public PaginationResponse<Person> findByFirstName(final String firstName,

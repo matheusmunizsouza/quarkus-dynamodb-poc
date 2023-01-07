@@ -26,8 +26,8 @@ public class PersonEnhancedAsyncResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<PaginationResponse<PersonEnhanced>> getAll() {
-    return personEnhancedAsyncService.findAll();
+  public Uni<PaginationResponse<PersonEnhanced>> getAll(final PaginationRequest paginationRequest) {
+    return personEnhancedAsyncService.findAll(paginationRequest);
   }
 
   @GET

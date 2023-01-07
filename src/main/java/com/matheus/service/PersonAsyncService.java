@@ -27,9 +27,9 @@ public class PersonAsyncService {
     this.dynamoDbAsyncClient = dynamoDbAsyncClient;
   }
 
-  public Uni<PaginationResponse<Person>> findAll() {
+  public Uni<PaginationResponse<Person>> findAll(final PaginationRequest paginationRequest) {
     return Uni.createFrom()
-        .publisher(dynamoDbAsyncClient.scanPaginator(scanRequest()))
+        .publisher(dynamoDbAsyncClient.scanPaginator(scanRequest(paginationRequest)))
         .onItem()
         .transform(res -> PaginationResponse.of(res.items().stream().map(Person::from).toList(),
             res.lastEvaluatedKey()));
@@ -86,9 +86,11 @@ public class PersonAsyncService {
         .transform(response -> Person.from(response.attributes()));
   }
 
-  private static ScanRequest scanRequest() {
+  private static ScanRequest scanRequest(PaginationRequest paginationRequest) {
     return ScanRequest.builder()
         .tableName(Person.TABLE_NAME)
+        .limit(paginationRequest.getLimit())
+        .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
         .build();
   }
 

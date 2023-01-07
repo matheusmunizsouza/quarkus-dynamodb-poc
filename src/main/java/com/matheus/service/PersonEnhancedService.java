@@ -15,6 +15,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
 @ApplicationScoped
 public class PersonEnhancedService {
@@ -25,11 +26,16 @@ public class PersonEnhancedService {
     this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
   }
 
-  public PaginationResponse<PersonEnhanced> findAll() {
+  public PaginationResponse<PersonEnhanced> findAll(PaginationRequest paginationRequest) {
     DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
         PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class));
 
-    PageIterable<PersonEnhanced> page = table.scan();
+    ScanEnhancedRequest scanEnhancedRequest = ScanEnhancedRequest.builder()
+        .limit(paginationRequest.getLimit())
+        .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
+        .build();
+
+    PageIterable<PersonEnhanced> page = table.scan(scanEnhancedRequest);
 
     return PaginationResponse.from(page);
   }

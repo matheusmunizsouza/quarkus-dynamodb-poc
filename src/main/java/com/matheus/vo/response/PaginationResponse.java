@@ -26,8 +26,8 @@ public final class PaginationResponse<T> {
   }
 
   public static <T> PaginationResponse<T> from(final PageIterable<T> page) {
-    return new PaginationResponse<>(page.items().stream().toList(),
-        Long.valueOf(page.items().stream().count()).intValue(),
+    List<T> items = page.iterator().next().items().stream().toList();
+    return new PaginationResponse<>(items, items.size(),
         transformLastEvaluatedKey(page.iterator().next().lastEvaluatedKey()));
   }
 
