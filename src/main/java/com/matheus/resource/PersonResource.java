@@ -4,7 +4,6 @@ import com.matheus.model.Person;
 import com.matheus.service.PersonService;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
-import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -26,8 +25,8 @@ public class PersonResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public List<Person> findAll() {
-    return personService.findAll();
+  public PaginationResponse<Person> findAll(final PaginationRequest paginationRequest) {
+    return personService.findAll(paginationRequest);
   }
 
   @GET

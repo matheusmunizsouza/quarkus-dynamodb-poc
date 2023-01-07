@@ -3,7 +3,6 @@ package com.matheus.service;
 import com.matheus.model.Person;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
@@ -28,11 +27,12 @@ public class PersonAsyncService {
     this.dynamoDbAsyncClient = dynamoDbAsyncClient;
   }
 
-  public Multi<Person> findAll() {
-    return Multi.createFrom()
-        .completionStage(() -> dynamoDbAsyncClient.scan(scanRequest()))
+  public Uni<PaginationResponse<Person>> findAll() {
+    return Uni.createFrom()
+        .publisher(dynamoDbAsyncClient.scanPaginator(scanRequest()))
         .onItem()
-        .transformToIterable(res -> res.items().stream().map(Person::from).toList());
+        .transform(res -> PaginationResponse.of(res.items().stream().map(Person::from).toList(),
+            res.lastEvaluatedKey()));
   }
 
   public Uni<PaginationResponse<Person>> findByFirstName(final String firstName,

@@ -3,7 +3,6 @@ package com.matheus.service;
 import com.matheus.model.Person;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
-import java.util.List;
 import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -18,6 +17,7 @@ import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+import software.amazon.awssdk.services.dynamodb.paginators.ScanIterable;
 
 @ApplicationScoped
 public class PersonService {
@@ -28,14 +28,17 @@ public class PersonService {
     this.dynamoDbClient = dynamoDbClient;
   }
 
-  public List<Person> findAll() {
+  public PaginationResponse<Person> findAll(final PaginationRequest paginationRequest) {
     ScanRequest scanRequest = ScanRequest.builder()
         .tableName(Person.TABLE_NAME)
+        .exclusiveStartKey(paginationRequest.getLastEvaluatedKey())
+        .limit(paginationRequest.getLimit())
         .build();
 
-    return dynamoDbClient.scanPaginator(scanRequest).items().stream()
-        .map(Person::from)
-        .toList();
+    ScanIterable response = dynamoDbClient.scanPaginator(scanRequest);
+
+    return PaginationResponse.of(response.items().stream().map(Person::from).toList(),
+        response.iterator().next().lastEvaluatedKey());
   }
 
   public PaginationResponse<Person> findByFirstName(final String firstName,

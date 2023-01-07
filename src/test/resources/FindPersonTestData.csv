@@ -1,0 +1,5 @@
+path|expectedResponse
+/person|{"items":[{"firstName":"Person3","lastName":"lastNameTest","cpf":"86679311033"},{"firstName":"Person1","lastName":"lastNameTest","cpf":"86679311031"},{"firstName":"Person5","lastName":"lastNameTest","cpf":"86679311035"},{"firstName":"Person2","lastName":"lastNameTest","cpf":"86679311032"},{"firstName":"Person4","lastName":"lastNameTest","cpf":"86679311034"}],"size":5,"lastEvaluatedKey":{}}
+/person/firstname/Person1|{"items":[{"firstName":"Person1","lastName":"lastNameTest","cpf":"86679311031"}],"size":1,"lastEvaluatedKey":{}}
+/person/firstname/Person2/lastname/lastNameTest|{"firstName":"Person2","lastName":"lastNameTest","cpf":"86679311032"}
+/person/cpf/86679311033|{"items":[{"firstName":"Person3","lastName":"lastNameTest","cpf":"86679311033"}],"size":1,"lastEvaluatedKey":{}}

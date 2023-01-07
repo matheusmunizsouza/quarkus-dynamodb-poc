@@ -3,7 +3,6 @@ package com.matheus.service;
 import com.matheus.model.PersonEnhanced;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
-import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -26,10 +25,13 @@ public class PersonEnhancedService {
     this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
   }
 
-  public List<PersonEnhanced> findAll() {
+  public PaginationResponse<PersonEnhanced> findAll() {
     DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
         PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class));
-    return table.scan().items().stream().toList();
+
+    PageIterable<PersonEnhanced> page = table.scan();
+
+    return PaginationResponse.from(page);
   }
 
   public PaginationResponse<PersonEnhanced> findByFirstName(final String firstName,

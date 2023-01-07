@@ -9,6 +9,7 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndex;
@@ -27,6 +29,8 @@ import software.amazon.awssdk.services.dynamodb.model.Projection;
 import software.amazon.awssdk.services.dynamodb.model.ProjectionType;
 import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.PutRequest;
+import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 @QuarkusTest
 @QuarkusTestResource(DynamoDbResourceTest.class)
@@ -47,19 +51,14 @@ class PersonAsyncComponentTest {
 
   @ParameterizedTest
   @DisplayName("Should find person successfully")
-  @CsvFileSource(resources = "/FindPersonAsyncTestData.csv", numLinesToSkip = 1, delimiter = '|')
-  void shouldPersonSuccessfully(final String url, final String expectedResponse) {
-    PutItemRequest putItemRequest = PutItemRequest.builder()
-        .tableName(Person.TABLE_NAME)
-        .item(Person.of("firstNameTest", "lastNameTest", "cpfTest").toDynamodbAttributes())
-        .build();
-
-    dynamoDbClient.putItem(putItemRequest);
+  @CsvFileSource(resources = "/FindPersonTestData.csv", numLinesToSkip = 1, delimiter = '|')
+  void shouldPersonSuccessfully(final String path, final String expectedResponse) {
+    insertPersonsDataBase();
 
     given()
         .log().ifValidationFails()
         .when()
-        .get(url)
+        .get("/async" + path)
         .then()
         .log().ifValidationFails()
         .statusCode(200)
@@ -206,6 +205,56 @@ class PersonAsyncComponentTest {
         .tableName(Person.TABLE_NAME)
         .build();
     dynamoDbClient.deleteTable(deleteTableRequest);
+  }
+
+  private void insertPersonsDataBase() {
+    PutRequest person1PutRequest = PutRequest.builder()
+        .item(Person.of("Person1", "lastNameTest", "86679311031").toDynamodbAttributes())
+        .build();
+
+    PutRequest person2PutRequest = PutRequest.builder()
+        .item(Person.of("Person2", "lastNameTest", "86679311032").toDynamodbAttributes())
+        .build();
+
+    PutRequest person3PutRequest = PutRequest.builder()
+        .item(Person.of("Person3", "lastNameTest", "86679311033").toDynamodbAttributes())
+        .build();
+
+    PutRequest person4PutRequest = PutRequest.builder()
+        .item(Person.of("Person4", "lastNameTest", "86679311034").toDynamodbAttributes())
+        .build();
+
+    PutRequest person5PutRequest = PutRequest.builder()
+        .item(Person.of("Person5", "lastNameTest", "86679311035").toDynamodbAttributes())
+        .build();
+
+    WriteRequest person1WriteRequest = WriteRequest.builder()
+        .putRequest(person1PutRequest)
+        .build();
+
+    WriteRequest person2WriteRequest = WriteRequest.builder()
+        .putRequest(person2PutRequest)
+        .build();
+
+    WriteRequest person3WriteRequest = WriteRequest.builder()
+        .putRequest(person3PutRequest)
+        .build();
+
+    WriteRequest person4WriteRequest = WriteRequest.builder()
+        .putRequest(person4PutRequest)
+        .build();
+
+    WriteRequest person5WriteRequest = WriteRequest.builder()
+        .putRequest(person5PutRequest)
+        .build();
+
+    BatchWriteItemRequest batchWriteItemRequest = BatchWriteItemRequest.builder()
+        .requestItems(Map.of(Person.TABLE_NAME,
+            List.of(person1WriteRequest, person2WriteRequest, person3WriteRequest,
+                person4WriteRequest, person5WriteRequest)))
+        .build();
+
+    dynamoDbClient.batchWriteItem(batchWriteItemRequest);
   }
 
 }

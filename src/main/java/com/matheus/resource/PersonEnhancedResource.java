@@ -4,7 +4,6 @@ import com.matheus.model.PersonEnhanced;
 import com.matheus.service.PersonEnhancedService;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
-import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -26,7 +25,7 @@ public class PersonEnhancedResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public List<PersonEnhanced> findAll() {
+  public PaginationResponse<PersonEnhanced> findAll() {
     return personEnhancedService.findAll();
   }
 

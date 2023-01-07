@@ -4,7 +4,6 @@ import com.matheus.model.Person;
 import com.matheus.service.PersonAsyncService;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -27,7 +26,7 @@ public class PersonAsyncResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Multi<Person> getAll() {
+  public Uni<PaginationResponse<Person>> getAll() {
     return personAsyncService.findAll();
   }
 

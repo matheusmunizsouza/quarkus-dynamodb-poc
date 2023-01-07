@@ -1,5 +1,0 @@
-url|expectedResponse
-/sync/enhanced/person|[{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}]
-/sync/enhanced/person/firstname/firstNameTest|{"items":[{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}],"size":1,"lastEvaluatedKey":{}}
-/sync/enhanced/person/firstname/firstNameTest/lastname/lastNameTest|{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}
-/sync/enhanced/person/cpf/cpfTest|{"items":[{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}],"size":1,"lastEvaluatedKey":{}}

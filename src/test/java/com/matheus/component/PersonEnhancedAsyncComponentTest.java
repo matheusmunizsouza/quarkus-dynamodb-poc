@@ -19,8 +19,10 @@ import org.junit.jupiter.params.provider.CsvFileSource;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.EnhancedGlobalSecondaryIndex;
+import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
 import software.amazon.awssdk.services.dynamodb.model.Projection;
 import software.amazon.awssdk.services.dynamodb.model.ProjectionType;
 import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
@@ -47,17 +49,14 @@ class PersonEnhancedAsyncComponentTest {
 
   @ParameterizedTest
   @DisplayName("Should find enhanced person successfully")
-  @CsvFileSource(resources = "/FindPersonEnhancedAsyncTestData.csv", numLinesToSkip = 1, delimiter = '|')
-  void shouldPersonSuccessfully(final String url, final String expectedResponse) {
-    DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
-        PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class));
-
-    table.putItem(PersonEnhanced.of("firstNameTest", "lastNameTest", "cpfTest"));
+  @CsvFileSource(resources = "/FindPersonTestData.csv", numLinesToSkip = 1, delimiter = '|')
+  void shouldPersonSuccessfully(final String path, final String expectedResponse) {
+    insertPersonsDataBase();
 
     given()
         .log().ifValidationFails()
         .when()
-        .get(url)
+        .get("/async/enhanced" + path)
         .then()
         .log().ifValidationFails()
         .statusCode(200)
@@ -150,5 +149,25 @@ class PersonEnhancedAsyncComponentTest {
         .build();
 
     table.createTable(createTableEnhancedRequest);
+  }
+
+  private void insertPersonsDataBase() {
+    DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
+        PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class));
+
+    WriteBatch person1WriteBatch = WriteBatch.builder(PersonEnhanced.class)
+        .addPutItem(PersonEnhanced.of("Person1", "lastNameTest", "86679311031"))
+        .addPutItem(PersonEnhanced.of("Person2", "lastNameTest", "86679311032"))
+        .addPutItem(PersonEnhanced.of("Person3", "lastNameTest", "86679311033"))
+        .addPutItem(PersonEnhanced.of("Person4", "lastNameTest", "86679311034"))
+        .addPutItem(PersonEnhanced.of("Person5", "lastNameTest", "86679311035"))
+        .mappedTableResource(table)
+        .build();
+
+    BatchWriteItemEnhancedRequest batchWriteItemRequest = BatchWriteItemEnhancedRequest.builder()
+        .addWriteBatch(person1WriteBatch)
+        .build();
+
+    dynamoDbEnhancedClient.batchWriteItem(batchWriteItemRequest);
   }
 }

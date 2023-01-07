@@ -1,5 +1,0 @@
-url|expectedResponse
-/sync/person|[{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}]
-/sync/person/firstname/firstNameTest|{"items":[{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}],"size":1,"lastEvaluatedKey":{}}
-/sync/person/firstname/firstNameTest/lastname/lastNameTest|{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}
-/sync/person/cpf/cpfTest|{"items":[{"firstName":"firstNameTest","lastName":"lastNameTest","cpf":"cpfTest"}],"size":1,"lastEvaluatedKey":{}}

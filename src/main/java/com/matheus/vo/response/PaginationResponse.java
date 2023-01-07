@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public final class PaginationResponse<T> {
@@ -22,6 +23,12 @@ public final class PaginationResponse<T> {
   public static <T> PaginationResponse<T> from(final Page<T> page) {
     return new PaginationResponse<>(page.items(), page.items().size(),
         transformLastEvaluatedKey(page.lastEvaluatedKey()));
+  }
+
+  public static <T> PaginationResponse<T> from(final PageIterable<T> page) {
+    return new PaginationResponse<>(page.items().stream().toList(),
+        Long.valueOf(page.items().stream().count()).intValue(),
+        transformLastEvaluatedKey(page.iterator().next().lastEvaluatedKey()));
   }
 
   public static <T> PaginationResponse<T> of(List<T> items,
