@@ -18,7 +18,7 @@ public final class PersonEnhanced {
   public PersonEnhanced() {
   }
 
-  public PersonEnhanced(String firstName, String lastName, String cpf) {
+  private PersonEnhanced(String firstName, String lastName, String cpf) {
     this.firstName = firstName;
     this.lastName = lastName;
     this.cpf = cpf;
