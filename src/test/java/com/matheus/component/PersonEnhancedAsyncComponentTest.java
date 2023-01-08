@@ -4,10 +4,12 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.matheus.component.resources.DynamoDbResourceTest;
 import com.matheus.model.Person;
 import com.matheus.model.PersonEnhanced;
+import com.matheus.vo.request.DeletePeopleBatch;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -131,8 +133,8 @@ class PersonEnhancedAsyncComponentTest {
   }
 
   @Test
-  @DisplayName("Should put batch successfully")
-  void shouldPutBatchSuccessfully() {
+  @DisplayName("Should put people by batch successfully")
+  void shouldPutPeopleByBatchSuccessfully() {
 
     insertPersonsDataBase();
 
@@ -159,6 +161,36 @@ class PersonEnhancedAsyncComponentTest {
         () -> assertEquals("Person1", person1.getFirstName()),
         () -> assertEquals("lastNameTest", person1.getLastName()),
         () -> assertEquals("updated", person1.getCpf()));
+  }
+
+  @Test
+  @DisplayName("Should delete people by batch successfully")
+  void shouldDeletePeopleByBatchSuccessfully() {
+
+    insertPersonsDataBase();
+
+    List<DeletePeopleBatch> deletePeopleBatches = List.of(
+        new DeletePeopleBatch("Person1", "lastNameTest"),
+        new DeletePeopleBatch("Person2", "lastNameTest"),
+        new DeletePeopleBatch("Person3", "lastNameTest"));
+
+    given()
+        .log().ifValidationFails()
+        .when()
+        .body(deletePeopleBatches)
+        .contentType(ContentType.JSON)
+        .delete("/async/enhanced/person/batch")
+        .then()
+        .log().ifValidationFails()
+        .statusCode(204);
+
+    List<PersonEnhanced> expectedPeople = getPeople();
+
+    PersonEnhanced person1 = getPerson1();
+
+    assertAll(
+        () -> assertEquals(2, expectedPeople.size()),
+        () -> assertNull(person1));
   }
 
   private void createEnhancedPersonTable() {

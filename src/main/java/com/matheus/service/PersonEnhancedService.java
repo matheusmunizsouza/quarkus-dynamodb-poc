@@ -1,6 +1,7 @@
 package com.matheus.service;
 
 import com.matheus.model.PersonEnhanced;
+import com.matheus.vo.request.DeletePeopleBatch;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
 import java.util.List;
@@ -117,13 +118,34 @@ public class PersonEnhancedService {
     return table.updateItem(person);
   }
 
-  public void putBatch(final List<PersonEnhanced> people) {
+  public void putPeople(final List<PersonEnhanced> people) {
     DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
         PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class));
 
     Builder<PersonEnhanced> writeBatchBuilder = WriteBatch.builder(PersonEnhanced.class);
 
     people.forEach(writeBatchBuilder::addPutItem);
+
+    WriteBatch writeBatch = writeBatchBuilder
+        .mappedTableResource(table)
+        .build();
+
+    dynamoDbEnhancedClient.batchWriteItem(
+        BatchWriteItemEnhancedRequest.builder()
+            .addWriteBatch(writeBatch)
+            .build());
+  }
+
+  public void deletePeople(final List<DeletePeopleBatch> deletePeopleBatches) {
+    DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
+        PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class));
+
+    Builder<PersonEnhanced> writeBatchBuilder = WriteBatch.builder(PersonEnhanced.class);
+
+    deletePeopleBatches.forEach(deletePeopleBatch -> writeBatchBuilder.addDeleteItem(Key.builder()
+        .partitionValue(deletePeopleBatch.firstName())
+        .sortValue(deletePeopleBatch.lastName())
+        .build()));
 
     WriteBatch writeBatch = writeBatchBuilder
         .mappedTableResource(table)

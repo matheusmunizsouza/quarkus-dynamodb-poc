@@ -1,6 +1,7 @@
 package com.matheus.service;
 
 import com.matheus.model.PersonEnhanced;
+import com.matheus.vo.request.DeletePeopleBatch;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
 import io.smallrye.mutiny.Uni;
@@ -111,7 +112,7 @@ public class PersonEnhancedAsyncService {
         .transform(CompletableFuture::join);
   }
 
-  public Uni<Void> putBatch(final List<PersonEnhanced> people) {
+  public Uni<Void> putPeople(final List<PersonEnhanced> people) {
     return Uni.createFrom()
         .item(() -> dynamoDbEnhancedAsyncClient.table(PersonEnhanced.TABLE_NAME,
             TableSchema.fromBean(PersonEnhanced.class)))
@@ -119,6 +120,33 @@ public class PersonEnhancedAsyncService {
           Builder<PersonEnhanced> writeBatchBuilder = WriteBatch.builder(PersonEnhanced.class);
 
           people.forEach(writeBatchBuilder::addPutItem);
+
+          return writeBatchBuilder
+              .mappedTableResource(table)
+              .build();
+        })
+        .flatMap(writeBatch -> Uni.createFrom()
+            .completionStage(dynamoDbEnhancedAsyncClient.batchWriteItem(
+                BatchWriteItemEnhancedRequest.builder()
+                    .addWriteBatch(writeBatch)
+                    .build())))
+        .onItem()
+        .ignore()
+        .andContinueWithNull();
+  }
+
+  public Uni<Void> deletePeople(final List<DeletePeopleBatch> deletePeopleBatches) {
+    return Uni.createFrom()
+        .item(() -> dynamoDbEnhancedAsyncClient.table(PersonEnhanced.TABLE_NAME,
+            TableSchema.fromBean(PersonEnhanced.class)))
+        .map(table -> {
+          Builder<PersonEnhanced> writeBatchBuilder = WriteBatch.builder(PersonEnhanced.class);
+
+          deletePeopleBatches.forEach(
+              deletePeopleBatch -> writeBatchBuilder.addDeleteItem(Key.builder()
+                  .partitionValue(deletePeopleBatch.firstName())
+                  .sortValue(deletePeopleBatch.lastName())
+                  .build()));
 
           return writeBatchBuilder
               .mappedTableResource(table)

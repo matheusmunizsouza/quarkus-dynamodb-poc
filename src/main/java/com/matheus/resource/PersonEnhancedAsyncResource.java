@@ -2,6 +2,7 @@ package com.matheus.resource;
 
 import com.matheus.model.PersonEnhanced;
 import com.matheus.service.PersonEnhancedAsyncService;
+import com.matheus.vo.request.DeletePeopleBatch;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
 import io.smallrye.mutiny.Uni;
@@ -85,7 +86,14 @@ public class PersonEnhancedAsyncResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Void> putBatch(final List<PersonEnhanced> people) {
-    return personEnhancedAsyncService.putBatch(people);
+    return personEnhancedAsyncService.putPeople(people);
   }
 
+  @DELETE
+  @Path("/batch")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Void> deletePeople(final List<DeletePeopleBatch> deletePeopleBatches) {
+    return personEnhancedAsyncService.deletePeople(deletePeopleBatches);
+  }
 }

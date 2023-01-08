@@ -2,6 +2,7 @@ package com.matheus.resource;
 
 import com.matheus.model.Person;
 import com.matheus.service.PersonService;
+import com.matheus.vo.request.DeletePeopleBatch;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
 import java.util.List;
@@ -84,7 +85,15 @@ public class PersonResource {
   @Path("/batch")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public void putBatch(final List<Person> people) {
+  public void putPeople(final List<Person> people) {
     personService.putBatch(people);
+  }
+
+  @DELETE
+  @Path("/batch")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public void deletePeople(final List<DeletePeopleBatch> deletePeopleBatches) {
+    personService.deletePeople(deletePeopleBatches);
   }
 }

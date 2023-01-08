@@ -1,6 +1,7 @@
 package com.matheus.service;
 
 import com.matheus.model.Person;
+import com.matheus.vo.request.DeletePeopleBatch;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
 import io.smallrye.mutiny.Uni;
@@ -13,6 +14,7 @@ import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 import software.amazon.awssdk.services.dynamodb.model.Condition;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DeleteRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.PutRequest;
@@ -90,10 +92,19 @@ public class PersonAsyncService {
         .transform(response -> Person.from(response.attributes()));
   }
 
-  public Uni<Void> putBatch(final List<Person> people) {
+  public Uni<Void> putPeople(final List<Person> people) {
     return Uni.createFrom()
         .completionStage(dynamoDbAsyncClient.batchWriteItem(
-            getBatchWriteItemRequest(getWriteRequests(people))))
+            getBatchWriteItemRequest(getPutWriteRequests(people))))
+        .onItem()
+        .ignore()
+        .andContinueWithNull();
+  }
+
+  public Uni<Void> deletePeople(final List<DeletePeopleBatch> deletePeopleBatches) {
+    return Uni.createFrom()
+        .completionStage(dynamoDbAsyncClient.batchWriteItem(
+            getBatchWriteItemRequest(getDeleteWriteRequests(deletePeopleBatches))))
         .onItem()
         .ignore()
         .andContinueWithNull();
@@ -168,7 +179,7 @@ public class PersonAsyncService {
         .build();
   }
 
-  private static UpdateItemRequest getUpdateItemRequest(Person person) {
+  private UpdateItemRequest getUpdateItemRequest(Person person) {
     return UpdateItemRequest.builder()
         .tableName(Person.TABLE_NAME)
         .key(Map.of(
@@ -181,7 +192,7 @@ public class PersonAsyncService {
         .build();
   }
 
-  private static List<WriteRequest> getWriteRequests(List<Person> people) {
+  private List<WriteRequest> getPutWriteRequests(List<Person> people) {
     return people.stream()
         .map(person -> PutRequest.builder()
             .item(person.toDynamodbAttributes())
@@ -192,9 +203,24 @@ public class PersonAsyncService {
         .toList();
   }
 
-  private static BatchWriteItemRequest getBatchWriteItemRequest(List<WriteRequest> writeRequests) {
+  private BatchWriteItemRequest getBatchWriteItemRequest(List<WriteRequest> writeRequests) {
     return BatchWriteItemRequest.builder()
         .requestItems(Map.of(Person.TABLE_NAME, writeRequests))
         .build();
+  }
+
+  private List<WriteRequest> getDeleteWriteRequests(List<DeletePeopleBatch> deletePeopleBatches) {
+    return deletePeopleBatches.stream()
+        .map(deletePeopleBatch -> DeleteRequest.builder()
+            .key(Map.of(
+                Person.FIRST_NAME_COLUMN,
+                AttributeValue.builder().s(deletePeopleBatch.firstName()).build(),
+                Person.LAST_NAME_COLUMN,
+                AttributeValue.builder().s(deletePeopleBatch.lastName()).build()))
+            .build())
+        .map(deleteItemRequest -> WriteRequest.builder()
+            .deleteRequest(deleteItemRequest)
+            .build())
+        .toList();
   }
 }
