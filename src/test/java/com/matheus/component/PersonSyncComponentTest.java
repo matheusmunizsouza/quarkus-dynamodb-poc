@@ -2,6 +2,8 @@ package com.matheus.component;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.matheus.component.resources.DynamoDbResourceTest;
 import com.matheus.model.Person;
@@ -19,9 +21,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndex;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
@@ -130,6 +134,37 @@ class PersonSyncComponentTest {
         .statusCode(200)
         .body(
             is("{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfUpdatedTest\"}"));
+  }
+
+  @Test
+  @DisplayName("Should put batch successfully")
+  void shouldPutBatchSuccessfully() {
+
+    insertPersonsDataBase();
+
+    List<Person> peopleRequest = List.of(
+        Person.of("Person1", "lastNameTest", "updated"),
+        Person.of("Person6", "lastNameTest", "86679311036"),
+        Person.of("Person7", "lastNameTest", "86679311037"));
+
+    given()
+        .log().ifValidationFails()
+        .when()
+        .body(peopleRequest)
+        .contentType(ContentType.JSON)
+        .put("/sync/person/batch")
+        .then()
+        .log().ifValidationFails()
+        .statusCode(204);
+
+    List<Person> expectedPeople = getPeople();
+    Person person1 = getPerson1();
+
+    assertAll(
+        () -> assertEquals(7, expectedPeople.size()),
+        () -> assertEquals("Person1", person1.getFirstName()),
+        () -> assertEquals("lastNameTest", person1.getLastName()),
+        () -> assertEquals("updated", person1.getCpf()));
   }
 
   private void createPersonTable() {
@@ -255,5 +290,23 @@ class PersonSyncComponentTest {
         .build();
 
     dynamoDbClient.batchWriteItem(batchWriteItemRequest);
+  }
+
+  private List<Person> getPeople() {
+    return dynamoDbClient.scan(
+            scanRequest -> scanRequest.tableName(Person.TABLE_NAME)).items().stream()
+        .map(Person::from)
+        .toList();
+  }
+
+  private Person getPerson1() {
+    GetItemRequest getItemRequest = GetItemRequest.builder()
+        .tableName(Person.TABLE_NAME)
+        .key(Map.of(
+            Person.FIRST_NAME_COLUMN, AttributeValue.builder().s("Person1").build(),
+            Person.LAST_NAME_COLUMN, AttributeValue.builder().s("lastNameTest").build()))
+        .build();
+
+    return Person.from(dynamoDbClient.getItem(getItemRequest).item());
   }
 }

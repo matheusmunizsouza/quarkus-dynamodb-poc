@@ -22,19 +22,19 @@ class PaginationResponseTest {
   @DisplayName("Should create pagination response successfully")
   void shouldCreatePaginationResponseSuccessfully() {
     Person person = Person.of("Name", "Lastname", "86679311033");
-    List<Person> persons = List.of(person);
-    PaginationResponse<Person> paginationOf = PaginationResponse.of(persons,
+    List<Person> people = List.of(person);
+    PaginationResponse<Person> paginationOf = PaginationResponse.of(people,
         Map.of());
 
     Map<String, AttributeValue> lastKey = Map.of(
         Person.FIRST_NAME_COLUMN, AttributeValue.builder().s("Name").build(),
         Person.LAST_NAME_COLUMN, AttributeValue.builder().s("Lastname").build());
-    PaginationResponse<Person> paginationOfWithLastKey = PaginationResponse.of(persons, lastKey);
+    PaginationResponse<Person> paginationOfWithLastKey = PaginationResponse.of(people, lastKey);
 
-    Page<Person> personPage = Page.create(persons);
+    Page<Person> personPage = Page.create(people);
     PaginationResponse<Person> paginationFromPage = PaginationResponse.from(personPage);
 
-    Page<Person> personPageWithLastKey = Page.create(persons, lastKey);
+    Page<Person> personPageWithLastKey = Page.create(people, lastKey);
     PaginationResponse<Person> paginationFromPageWithLastKey = PaginationResponse.from(
         personPageWithLastKey);
 
@@ -47,28 +47,28 @@ class PaginationResponseTest {
         pageWithLastKeyIterable);
 
     assertAll(
-        () -> assertEquals(persons, paginationOf.getItems()),
+        () -> assertEquals(people, paginationOf.getItems()),
         () -> assertEquals(1, paginationOf.getSize()),
         () -> assertEquals(Map.of(), paginationOf.getLastEvaluatedKey()),
-        () -> assertEquals(persons, paginationOfWithLastKey.getItems()),
+        () -> assertEquals(people, paginationOfWithLastKey.getItems()),
         () -> assertEquals(1, paginationOfWithLastKey.getSize()),
         () -> assertEquals(Map.of(
                 "firstName", "Name",
                 "lastName", "Lastname"),
             paginationOfWithLastKey.getLastEvaluatedKey()),
-        () -> assertEquals(persons, paginationFromPage.getItems()),
+        () -> assertEquals(people, paginationFromPage.getItems()),
         () -> assertEquals(1, paginationFromPage.getSize()),
         () -> assertEquals(Map.of(), paginationFromPage.getLastEvaluatedKey()),
-        () -> assertEquals(persons, paginationFromPageWithLastKey.getItems()),
+        () -> assertEquals(people, paginationFromPageWithLastKey.getItems()),
         () -> assertEquals(1, paginationFromPageWithLastKey.getSize()),
         () -> assertEquals(Map.of(
                 "firstName", "Name",
                 "lastName", "Lastname")
             , paginationFromPageWithLastKey.getLastEvaluatedKey()),
-        () -> assertEquals(persons, paginationFromPageIterable.getItems()),
+        () -> assertEquals(people, paginationFromPageIterable.getItems()),
         () -> assertEquals(1, paginationFromPageIterable.getSize()),
         () -> assertEquals(Map.of(), paginationFromPageIterable.getLastEvaluatedKey()),
-        () -> assertEquals(persons, paginationFromPageIterableWithLastKey.getItems()),
+        () -> assertEquals(people, paginationFromPageIterableWithLastKey.getItems()),
         () -> assertEquals(1, paginationFromPageIterableWithLastKey.getSize()),
         () -> assertEquals(Map.of(
                 "firstName", "Name",

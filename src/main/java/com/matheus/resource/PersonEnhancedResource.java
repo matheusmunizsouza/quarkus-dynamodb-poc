@@ -4,6 +4,7 @@ import com.matheus.model.PersonEnhanced;
 import com.matheus.service.PersonEnhancedService;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -77,5 +78,13 @@ public class PersonEnhancedResource {
   @Produces(MediaType.APPLICATION_JSON)
   public PersonEnhanced update(final PersonEnhanced person) {
     return personEnhancedService.update(person);
+  }
+
+  @PUT
+  @Path("/batch")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public void putBatch(final List<PersonEnhanced> people) {
+    personEnhancedService.putBatch(people);
   }
 }

@@ -4,6 +4,7 @@ import com.matheus.model.Person;
 import com.matheus.service.PersonService;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -77,5 +78,13 @@ public class PersonResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Person update(final Person person) {
     return personService.update(person);
+  }
+
+  @PUT
+  @Path("/batch")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public void putBatch(final List<Person> people) {
+    personService.putBatch(people);
   }
 }

@@ -4,13 +4,17 @@ import com.matheus.model.PersonEnhanced;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
 import io.smallrye.mutiny.Uni;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import javax.enterprise.context.ApplicationScoped;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
+import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch.Builder;
 
 @ApplicationScoped
 public class PersonEnhancedAsyncService {
@@ -105,5 +109,28 @@ public class PersonEnhancedAsyncService {
         .map(table -> table.updateItem(person))
         .onItem()
         .transform(CompletableFuture::join);
+  }
+
+  public Uni<Void> putBatch(final List<PersonEnhanced> people) {
+    return Uni.createFrom()
+        .item(() -> dynamoDbEnhancedAsyncClient.table(PersonEnhanced.TABLE_NAME,
+            TableSchema.fromBean(PersonEnhanced.class)))
+        .map(table -> {
+          Builder<PersonEnhanced> writeBatchBuilder = WriteBatch.builder(PersonEnhanced.class);
+
+          people.forEach(writeBatchBuilder::addPutItem);
+
+          return writeBatchBuilder
+              .mappedTableResource(table)
+              .build();
+        })
+        .flatMap(writeBatch -> Uni.createFrom()
+            .completionStage(dynamoDbEnhancedAsyncClient.batchWriteItem(
+                BatchWriteItemEnhancedRequest.builder()
+                    .addWriteBatch(writeBatch)
+                    .build())))
+        .onItem()
+        .ignore()
+        .andContinueWithNull();
   }
 }

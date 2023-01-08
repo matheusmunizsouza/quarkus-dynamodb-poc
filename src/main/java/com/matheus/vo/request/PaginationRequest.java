@@ -17,6 +17,7 @@ public final class PaginationRequest {
     return limit == null ? 10 : limit;
   }
 
+  @SuppressWarnings("java:S1168")
   public Map<String, AttributeValue> getLastEvaluatedKey() {
     if (!StringUtils.isEmpty(lastEvaluatedKey)) {
       HashMap<String, AttributeValue> keys = new HashMap<>();

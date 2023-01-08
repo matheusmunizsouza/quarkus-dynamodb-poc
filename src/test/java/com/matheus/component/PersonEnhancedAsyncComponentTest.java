@@ -2,6 +2,8 @@ package com.matheus.component;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.matheus.component.resources.DynamoDbResourceTest;
 import com.matheus.model.Person;
@@ -9,6 +11,7 @@ import com.matheus.model.PersonEnhanced;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import java.util.List;
 import javax.inject.Inject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +21,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.CreateTableEnhancedRequest;
@@ -126,6 +130,37 @@ class PersonEnhancedAsyncComponentTest {
             is("{\"firstName\":\"firstNameTest\",\"lastName\":\"lastNameTest\",\"cpf\":\"cpfUpdatedTest\"}"));
   }
 
+  @Test
+  @DisplayName("Should put batch successfully")
+  void shouldPutBatchSuccessfully() {
+
+    insertPersonsDataBase();
+
+    List<PersonEnhanced> peopleRequest = List.of(
+        PersonEnhanced.of("Person1", "lastNameTest", "updated"),
+        PersonEnhanced.of("Person6", "lastNameTest", "86679311036"),
+        PersonEnhanced.of("Person7", "lastNameTest", "86679311037"));
+
+    given()
+        .log().ifValidationFails()
+        .when()
+        .body(peopleRequest)
+        .contentType(ContentType.JSON)
+        .put("/async/enhanced/person/batch")
+        .then()
+        .log().ifValidationFails()
+        .statusCode(204);
+
+    List<PersonEnhanced> expectedPeople = getPeople();
+    PersonEnhanced person1 = getPerson1();
+
+    assertAll(
+        () -> assertEquals(7, expectedPeople.size()),
+        () -> assertEquals("Person1", person1.getFirstName()),
+        () -> assertEquals("lastNameTest", person1.getLastName()),
+        () -> assertEquals("updated", person1.getCpf()));
+  }
+
   private void createEnhancedPersonTable() {
     DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
         PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class));
@@ -169,5 +204,20 @@ class PersonEnhancedAsyncComponentTest {
         .build();
 
     dynamoDbEnhancedClient.batchWriteItem(batchWriteItemRequest);
+  }
+
+  private List<PersonEnhanced> getPeople() {
+    DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
+        PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class));
+
+    return table.scan().iterator().next().items();
+  }
+
+  private PersonEnhanced getPerson1() {
+    DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
+        PersonEnhanced.TABLE_NAME,
+        TableSchema.fromBean(PersonEnhanced.class));
+
+    return table.getItem(Key.builder().partitionValue("Person1").sortValue("lastNameTest").build());
   }
 }

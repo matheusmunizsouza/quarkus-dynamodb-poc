@@ -3,6 +3,7 @@ package com.matheus.service;
 import com.matheus.model.PersonEnhanced;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
+import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import software.amazon.awssdk.core.pagination.sync.SdkIterable;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -10,12 +11,15 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
+import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch.Builder;
 
 @ApplicationScoped
 public class PersonEnhancedService {
@@ -111,5 +115,23 @@ public class PersonEnhancedService {
         PersonEnhanced.TABLE_NAME,
         TableSchema.fromBean(PersonEnhanced.class));
     return table.updateItem(person);
+  }
+
+  public void putBatch(final List<PersonEnhanced> people) {
+    DynamoDbTable<PersonEnhanced> table = dynamoDbEnhancedClient.table(
+        PersonEnhanced.TABLE_NAME, TableSchema.fromBean(PersonEnhanced.class));
+
+    Builder<PersonEnhanced> writeBatchBuilder = WriteBatch.builder(PersonEnhanced.class);
+
+    people.forEach(writeBatchBuilder::addPutItem);
+
+    WriteBatch writeBatch = writeBatchBuilder
+        .mappedTableResource(table)
+        .build();
+
+    dynamoDbEnhancedClient.batchWriteItem(
+        BatchWriteItemEnhancedRequest.builder()
+            .addWriteBatch(writeBatch)
+            .build());
   }
 }

@@ -5,6 +5,7 @@ import com.matheus.service.PersonAsyncService;
 import com.matheus.vo.request.PaginationRequest;
 import com.matheus.vo.response.PaginationResponse;
 import io.smallrye.mutiny.Uni;
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -78,5 +79,13 @@ public class PersonAsyncResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Person> update(final Person person) {
     return personAsyncService.update(person);
+  }
+
+  @PUT
+  @Path("/batch")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<Void> putBatch(final List<Person> people) {
+    return personAsyncService.putBatch(people);
   }
 }
